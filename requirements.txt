@@ -1,6 +1,6 @@
 flask
 python-dotenv
-pinecone-client
+pinecone
 langchain
 langchain-openai
 openai
