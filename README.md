@@ -2,8 +2,6 @@
 
 A knowledge assistant that retrieves information from documents, generates natural-language answers, and orchestrates its workflow through a basic agentic system.
 
-![RAG-Powered Assistant Demo](https://via.placeholder.com/800x400/151E3F/FFFFFF?text=RAG-Powered+Assistant)
-
 ## Features
 
 - **Document Ingestion**: Upload and process text documents for knowledge retrieval
@@ -16,8 +14,6 @@ A knowledge assistant that retrieves information from documents, generates natur
 - **Explainable Results**: View which tool was used, decision reasoning, and source context
 
 ## Architecture
-
-![Architecture Diagram](https://mermaid.ink/img/pako:eNp1kc1uwjAQhF_F2lNAJEAgOeSSqgdOvVU99OB4l2Ap_sh2QIjw7nUSEFV7qS3vzHw7Xm8iN05hEmXKCtiuPZw7cM7JtIMvUZRGTpXGJKP9QbRK290sSrTGXYGvBo4ySqbQK9UEaNYWrBvQDt9kbYL1FrQJEQVYeCLjfX6C0sAu5KsUzzk_FvYOsm2DZLXk3HGGvPw9IgOFVEXoEzjPnKCXsW2DrMIJlB1Y4w2NehV-gZbcoeQ19KS-eO4v8fVBdY9a-y2MQ30Djw7ksBLF3mUq5HgG_5WFNXaAyfcCm1bzUMqQGHZitTHsUTXqaThWjGiYRpqAP5h_IrwHJqVoNVgnk5jnfOxH_g3i-YKvDXxP-Z7yLR_7a_zdyHHFZLHmi3XM94v01VU5fgdO2JdN?type=png)
 
 ### Components
 
@@ -39,7 +35,7 @@ A knowledge assistant that retrieves information from documents, generates natur
    - **Document Processor**: Chunks documents for indexing
    - **Vector Store**: Pinecone-based vector database for efficient retrieval
    - **Retriever**: Finds the most relevant document chunks for a query
-   - **LLM Integration**: Uses OpenRouter to generate answers from retrieved context
+   - **LLM Integration**: Uses OpenAI to generate answers from retrieved context
 
 ## Getting Started
 
@@ -47,7 +43,7 @@ A knowledge assistant that retrieves information from documents, generates natur
 
 - Python 3.9+
 - Pinecone account (for vector storage)
-- OpenRouter account (for LLM access)
+- OpenAI API key (for LLM access)
 
 ### Installation
 
@@ -70,11 +66,9 @@ A knowledge assistant that retrieves information from documents, generates natur
 
 4. Create a `.env` file in the project root with your API keys:
    ```
-   OPENROUTER_API_KEY=your_openrouter_api_key
+   OPENAI_API_KEY=your_openai_api_key
    PINECONE_API_KEY=your_pinecone_api_key
-   PINECONE_ENVIRONMENT=your_pinecone_environment
    PINECONE_INDEX_NAME=rag-agent-index
-   LLM_MODEL=mistralai/mistral-7b-instruct
    FLASK_ENV=development
    FLASK_DEBUG=true
    ```
@@ -146,12 +140,12 @@ rag-powered-agent/
 │
 ├── llm/                    # LLM integration
 │   ├── __init__.py
-│   └── openrouter.py       # OpenRouter API client
+│   └── openai_client.py    # OpenAI API client
 │
 └── data/                   # Sample documents for ingestion
-    ├── company_faq.txt
-    ├── product_specs.txt
-    └── research_whitepaper.txt
+    ├── doc1.txt
+    ├── doc2.txt
+    └── doc3.txt
 ```
 
 ## Key Design Choices
@@ -160,7 +154,7 @@ rag-powered-agent/
 2. **Agent-Based Decision Making**: Queries are routed to specialized tools for optimal handling.
 3. **Vector-Based Search**: Semantic search enables finding relevant information even when query terms don't exactly match document content.
 4. **Document Chunking Strategy**: Documents are broken into semantic chunks with overlap to maintain context.
-5. **LLM Integration**: OpenRouter provides flexibility to use different models while maintaining a consistent API.
+5. **LLM Integration**: OpenAI provides reliable and high-quality language model capabilities.
 6. **Explainable Pipeline**: Each step of the process is transparent and visible to users.
 
 ## Future Enhancements
