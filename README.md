@@ -150,12 +150,65 @@ rag-powered-agent/
 
 ## Key Design Choices
 
-1. **Modular Architecture**: Components are decoupled for easy extension and maintenance.
-2. **Agent-Based Decision Making**: Queries are routed to specialized tools for optimal handling.
-3. **Vector-Based Search**: Semantic search enables finding relevant information even when query terms don't exactly match document content.
-4. **Document Chunking Strategy**: Documents are broken into semantic chunks with overlap to maintain context.
-5. **LLM Integration**: OpenAI provides reliable and high-quality language model capabilities.
-6. **Explainable Pipeline**: Each step of the process is transparent and visible to users.
+1. **Modular Architecture**:
+   - Clean separation between agents, RAG pipeline, and tools
+   - Independent components that can be tested and modified in isolation
+   - Extensible design for adding new capabilities
+   - Maintainable codebase with clear responsibilities
+
+2. **Intelligent Query Routing**:
+   - Pattern-based query analysis for accurate tool selection
+   - Support for multi-intent queries
+   - Fallback mechanisms for edge cases
+   - Detailed logging for system behavior analysis
+
+3. **Efficient Vector Search**:
+   - OpenAI's text-embedding-3-large for semantic understanding
+   - Cosine similarity for relevance scoring
+   - Pinecone's serverless architecture for scalability
+   - Optimized retrieval for quick responses
+
+4. **Smart Document Processing**:
+   - Context-preserving document chunking
+   - Configurable overlap for maintaining context
+   - Rich metadata for better understanding
+   - Support for multiple document formats
+
+5. **Reliable LLM Integration**:
+   - Direct OpenAI integration for consistent results
+   - Context-aware response generation
+   - Efficient context management
+   - Quality-focused answer generation
+
+6. **Transparent System**:
+   - Clear decision-making process
+   - Source tracking for all answers
+   - Relevance scoring for retrieved documents
+   - Detailed operation logging
+
+7. **Error Management**:
+   - Graceful handling of service disruptions
+   - Comprehensive error tracking
+   - Automatic recovery from transient issues
+   - Clear user feedback
+
+8. **Performance Considerations**:
+   - Optimized vector operations
+   - Efficient resource utilization
+   - Smart caching strategies
+   - Scalable architecture
+
+9. **Security Measures**:
+   - Secure credential management
+   - Input validation
+   - Request rate control
+   - Environment-based settings
+
+10. **Development Support**:
+    - Structured logging
+    - Clear documentation
+    - Consistent code style
+    - Straightforward deployment
 
 ## Future Enhancements
 
