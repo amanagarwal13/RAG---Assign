@@ -164,11 +164,3 @@ rag-powered-agent/
 4. User feedback mechanism for answer quality
 5. Knowledge graph integration
 6. Advanced query analysis and routing
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

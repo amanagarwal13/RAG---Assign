@@ -4,19 +4,23 @@ import re
 
 logger = logging.getLogger(__name__)
 
+# Constants for answer generation
+MAX_CONTEXT_SNIPPETS = 3
+MIN_RELEVANCE_SCORE = 0.5
+
 class DocumentRetriever:
     """
     Retrieves relevant document chunks and generates answers using LLM.
     """
     
-    def __init__(self, vector_store, llm, top_k: int = 3):
+    def __init__(self, vector_store, llm, top_k: int = MAX_CONTEXT_SNIPPETS):
         """
         Initialize the document retriever.
         
         Args:
             vector_store: Vector store instance
             llm: LLM instance
-            top_k: Number of documents to retrieve
+            top_k: Number of documents to retrieve (default: MAX_CONTEXT_SNIPPETS)
         """
         self.vector_store = vector_store
         self.llm = llm
@@ -49,6 +53,11 @@ class DocumentRetriever:
             source = result["metadata"].get("source", "Unknown")
             if source in seen_sources:
                 continue
+                
+            # Skip low relevance results
+            if result["score"] < MIN_RELEVANCE_SCORE:
+                continue
+                
             seen_sources.add(source)
             
             snippet = {
@@ -121,12 +130,16 @@ class DocumentRetriever:
         context = "\n---\n".join(context_parts)
         
         # Create prompt for the LLM
-        prompt = f"""
-        Based on the following information from multiple sources, please provide a comprehensive answer to the question.
-        If the information provided doesn't contain the answer, please indicate that you don't know rather than making up an answer.
-        If there are conflicting pieces of information, please acknowledge the conflict and explain the different perspectives.
+        prompt = f"""You are a helpful AI assistant that answers questions based on provided context.
+        Your task is to provide accurate, well-structured answers using only the information given in the context.
         
-        Please provide a well-formatted, natural response that flows smoothly and incorporates all relevant information.
+        Guidelines:
+        1. Use only the information provided in the context
+        2. If the context doesn't contain the answer, say "I don't have enough information to answer that question"
+        3. If there are conflicting pieces of information, acknowledge the conflict and explain the different perspectives
+        4. Format your response in a clear, natural way
+        5. Include relevant quotes from the context when appropriate
+        6. Maintain a professional and helpful tone
         
         CONTEXT:
         {context}

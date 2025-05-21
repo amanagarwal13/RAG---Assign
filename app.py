@@ -1,9 +1,24 @@
+"""
+RAG-Powered Document Q&A System
+
+This module implements a Flask-based web application that provides a RAG (Retrieval-Augmented Generation)
+system for document-based question answering. It integrates with Pinecone for vector storage and OpenAI
+for embeddings and text generation.
+
+The application provides endpoints for:
+- Document upload and processing
+- Query processing and answer generation
+- System initialization
+- Question suggestions
+"""
+
 import os
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 import json
 import time
 import logging
+from typing import Dict, Any, List
 
 # Load environment variables
 load_dotenv()
@@ -25,15 +40,19 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Initialize components
-document_processor = DocumentProcessor()
-vector_store = PineconeVectorStore(
-    api_key=os.getenv("PINECONE_API_KEY"),
-    index_name=os.getenv("PINECONE_INDEX_NAME"),
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
-)
-llm = OpenAIClient(api_key=os.getenv("OPENAI_API_KEY"))
-retriever = DocumentRetriever(vector_store, llm)
+try:
+    document_processor = DocumentProcessor()
+    vector_store = PineconeVectorStore(
+        api_key=os.getenv("PINECONE_API_KEY"),
+        index_name=os.getenv("PINECONE_INDEX_NAME"),
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
+        embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
+    )
+    llm = OpenAIClient(api_key=os.getenv("OPENAI_API_KEY"))
+    retriever = DocumentRetriever(vector_store, llm)
+except Exception as e:
+    logger.error(f"Failed to initialize components: {str(e)}", exc_info=True)
+    raise
 
 @app.route('/')
 def index():

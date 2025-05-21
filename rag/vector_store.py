@@ -12,6 +12,19 @@ logger = logging.getLogger(__name__)
 
 from pinecone import Pinecone, ServerlessSpec
 
+# Constants for Pinecone configuration
+DEFAULT_INDEX_NAME = "rag-agent-index"
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-large"
+DEFAULT_DIMENSIONS = {
+    "text-embedding-3-large": 3072,
+    "text-embedding-3-small": 1536,
+    "text-embedding-ada-002": 1536
+}
+DEFAULT_METRIC = "cosine"
+DEFAULT_CLOUD = "aws"
+DEFAULT_REGION = "us-east-1"
+INITIALIZATION_WAIT_TIME = 10  # seconds
+
 class PineconeVectorStore:
     """
     Vector store implementation using Pinecone.
@@ -22,7 +35,7 @@ class PineconeVectorStore:
         api_key: str = None, 
         index_name: str = None, 
         openai_api_key: str = None,
-        embedding_model: str = "text-embedding-ada-002"
+        embedding_model: str = DEFAULT_EMBEDDING_MODEL
     ):
         """
         Initialize the Pinecone vector store.
@@ -35,7 +48,7 @@ class PineconeVectorStore:
         """
         # Get config from env vars if not provided
         self.api_key = api_key or os.getenv("PINECONE_API_KEY")
-        self.index_name = index_name or os.getenv("PINECONE_INDEX_NAME", "rag-agent-index")
+        self.index_name = index_name or os.getenv("PINECONE_INDEX_NAME", DEFAULT_INDEX_NAME)
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
         
         if not self.api_key:
@@ -51,12 +64,9 @@ class PineconeVectorStore:
         )
         
         # Set dimension based on model
-        if embedding_model == "text-embedding-3-large":
-            self.dimension = 3072
-        elif embedding_model == "text-embedding-3-small":
-            self.dimension = 1536
-        else:  # text-embedding-ada-002
-            self.dimension = 1536
+        self.dimension = DEFAULT_DIMENSIONS.get(embedding_model)
+        if not self.dimension:
+            raise ValueError(f"Unsupported embedding model: {embedding_model}")
             
         logger.info(f"Using embedding model {embedding_model} with dimension {self.dimension}")
         
@@ -67,11 +77,11 @@ class PineconeVectorStore:
         """Initialize Pinecone client and ensure index exists."""
         logger.info("Initializing Pinecone")
 
-        # Initialize Pinecone client
-        self.pc = Pinecone(api_key=self.api_key)
-
-        # Check if index exists, create if not
         try:
+            # Initialize Pinecone client
+            self.pc = Pinecone(api_key=self.api_key)
+
+            # Check if index exists, create if not
             existing_indexes = self.pc.list_indexes().names()
 
             if self.index_name not in existing_indexes:
@@ -79,14 +89,15 @@ class PineconeVectorStore:
                 self.pc.create_index(
                     name=self.index_name,
                     dimension=self.dimension,
-                    metric="cosine",
+                    metric=DEFAULT_METRIC,
                     spec=ServerlessSpec(
-                        cloud="aws",
-                        region="us-east-1"
+                        cloud=DEFAULT_CLOUD,
+                        region=DEFAULT_REGION
                     )
                 )
                 # Wait for index to be ready
-                time.sleep(10)
+                logger.info(f"Waiting {INITIALIZATION_WAIT_TIME} seconds for index to be ready...")
+                time.sleep(INITIALIZATION_WAIT_TIME)
 
             # Connect to the index
             self.index = self.pc.Index(self.index_name)
