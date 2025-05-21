@@ -151,3 +151,13 @@ rag-powered-agent/
    - Context-aware response generation
    - Quality-focused answer generation
 
+## Citations
+
+This project was built using:
+- OpenAI's GPT models and embeddings for natural language processing and text generation
+- Cursor IDE for development and code assistance
+
+For more information about the technologies used:
+- OpenAI: https://openai.com/
+- Cursor: https://cursor.sh/
+
