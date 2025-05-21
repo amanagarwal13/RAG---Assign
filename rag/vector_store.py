@@ -49,7 +49,16 @@ class PineconeVectorStore:
             api_key=self.openai_api_key,
             model_name=embedding_model
         )
-        self.dimension = self.embedding_generator.get_dimension()
+        
+        # Set dimension based on model
+        if embedding_model == "text-embedding-3-large":
+            self.dimension = 3072
+        elif embedding_model == "text-embedding-3-small":
+            self.dimension = 1536
+        else:  # text-embedding-ada-002
+            self.dimension = 1536
+            
+        logger.info(f"Using embedding model {embedding_model} with dimension {self.dimension}")
         
         # Initialize Pinecone
         self._initialize_pinecone()
@@ -222,3 +231,42 @@ class PineconeVectorStore:
         except Exception as e:
             logger.error(f"Error clearing index: {str(e)}", exc_info=True)
             raise
+
+    def get_random_chunks(self, limit: int = 3) -> List[Dict[str, Any]]:
+        """
+        Get random chunks from the vector store.
+        
+        Args:
+            limit: Number of random chunks to retrieve
+            
+        Returns:
+            List of document chunks with text and metadata
+        """
+        logger.info(f"Getting {limit} random chunks from Pinecone")
+        
+        try:
+            # Query with a random vector to get random results
+            random_vector = np.random.randn(self.dimension).tolist()
+            
+            # Query Pinecone
+            results = self.index.query(
+                vector=random_vector,
+                top_k=limit,
+                include_metadata=True
+            )
+            
+            # Format results
+            chunks = []
+            for match in results.get("matches", []):
+                chunk = {
+                    "text": match["metadata"].get("text", ""),
+                    "metadata": {k: v for k, v in match["metadata"].items() if k != "text"}
+                }
+                chunks.append(chunk)
+            
+            logger.info(f"Retrieved {len(chunks)} random chunks")
+            return chunks
+            
+        except Exception as e:
+            logger.error(f"Error getting random chunks: {str(e)}", exc_info=True)
+            return []

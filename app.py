@@ -9,9 +9,10 @@ import logging
 load_dotenv()
 
 # Import project modules
-from agents.orchestrator import AgentOrchestrator
 from rag.document_processor import DocumentProcessor
 from rag.vector_store import PineconeVectorStore
+from rag.retriever import DocumentRetriever
+from llm.openai_client import OpenAIClient
 
 # Configure logging
 logging.basicConfig(
@@ -29,9 +30,10 @@ vector_store = PineconeVectorStore(
     api_key=os.getenv("PINECONE_API_KEY"),
     index_name=os.getenv("PINECONE_INDEX_NAME"),
     openai_api_key=os.getenv("OPENAI_API_KEY"),
-    embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
+    embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
 )
-agent_orchestrator = AgentOrchestrator(vector_store)
+llm = OpenAIClient(api_key=os.getenv("OPENAI_API_KEY"))
+retriever = DocumentRetriever(vector_store, llm)
 
 @app.route('/')
 def index():
@@ -48,9 +50,9 @@ def process_query():
         if not query:
             return jsonify({'error': 'No query provided'}), 400
         
-        # Process query through agent orchestrator
+        # Process query through RAG pipeline
         start_time = time.time()
-        result = agent_orchestrator.process_query(query)
+        result = retriever.retrieve_and_generate(query)
         processing_time = time.time() - start_time
         
         # Add processing time to result
@@ -143,6 +145,78 @@ def get_documents():
         return jsonify({
             'status': 'error',
             'message': 'Failed to retrieve documents'
+        }), 500
+
+@app.route('/api/suggestions')
+def get_suggestions():
+    """Generate question suggestions based on the content in the vector database"""
+    try:
+        logger.info("Starting to generate suggestions")
+        
+        # Get a few random chunks from the vector database
+        chunks = vector_store.get_random_chunks(limit=3)
+        logger.info(f"Retrieved {len(chunks)} chunks from vector store")
+        
+        if not chunks:
+            logger.warning("No chunks found in vector store")
+            return jsonify({
+                'suggestions': []
+            })
+        
+        # Log the chunks we got
+        for i, chunk in enumerate(chunks):
+            logger.info(f"Chunk {i+1}: {chunk['text'][:100]}...")
+        
+        # Create a prompt for the LLM to generate questions
+        prompt = f"""Based on the following text snippets from documents, generate 3 relevant questions that could be asked about this content.
+        For each question, also provide a brief context about what part of the text it relates to.
+        Return ONLY the JSON array of objects with 'question' and 'context' fields, without any markdown formatting or code block markers.
+
+        Text snippets:
+        {chr(10).join([f"- {chunk['text']}" for chunk in chunks])}
+
+        Return the questions in this exact format:
+        [
+            {{
+                "question": "What is the main topic discussed in the first snippet?",
+                "context": "Based on the introduction section"
+            }},
+            ...
+        ]"""
+
+        logger.info("Sending prompt to LLM")
+        # Generate questions using the LLM
+        response = llm.generate(prompt)
+        logger.info(f"Received response from LLM: {response[:200]}...")
+        
+        try:
+            # Clean the response by removing any markdown code block markers
+            cleaned_response = response.strip()
+            if cleaned_response.startswith('```'):
+                cleaned_response = cleaned_response.split('\n', 1)[1]  # Remove first line
+            if cleaned_response.endswith('```'):
+                cleaned_response = cleaned_response.rsplit('\n', 1)[0]  # Remove last line
+            if cleaned_response.startswith('json'):
+                cleaned_response = cleaned_response.split('\n', 1)[1]  # Remove json marker
+            
+            # Parse the JSON response
+            suggestions = json.loads(cleaned_response)
+            logger.info(f"Successfully parsed {len(suggestions)} suggestions")
+            return jsonify({
+                'suggestions': suggestions
+            })
+        except json.JSONDecodeError as e:
+            # If the response isn't valid JSON, return an empty list
+            logger.warning(f"Failed to parse LLM response as JSON: {str(e)}")
+            logger.warning(f"Raw response: {response}")
+            return jsonify({
+                'suggestions': []
+            })
+            
+    except Exception as e:
+        logger.error(f"Error generating suggestions: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'Failed to generate suggestions'
         }), 500
 
 if __name__ == "__main__":
