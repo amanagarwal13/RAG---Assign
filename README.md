@@ -76,23 +76,6 @@ A knowledge assistant that retrieves information from documents and generates na
 
 4. Start asking questions!
 
-## Usage Examples
-
-### Calculator Tool
-- "Calculate 125 * 37 - 42"
-- "What is the square root of 144 plus 25?"
-- "Solve 15% of 240"
-
-### Dictionary Tool
-- "Define artificial intelligence"
-- "What is the meaning of quantum computing?"
-- "Define retrieval-augmented generation"
-
-### RAG Pipeline
-- "What is the KRAG framework?"
-- "What are the system requirements for cloud deployment?"
-- "How many employees does RAG Technologies have?"
-
 ## API Endpoints
 
 - `GET /`: Main application interface
